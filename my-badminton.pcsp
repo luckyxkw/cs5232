@@ -1,0 +1,86 @@
+﻿enum{left, right}; //serve position: ad court or deuce court
+enum{player1, player2, na}; // won player
+
+var won = na;
+
+Game = pcase {
+	1: tau -> Left_Player1_Serve
+	1: tau -> Right_Player1_Serve
+	1: tau -> Left_Player2_Serve
+	1: tau -> Right_Player2_Serve
+};
+
+Left_Player1_Serve = pcase {
+	1: Low_Serve -> Player2_Near_Net
+	1: Drive_Serve -> Player2_Counter_Drive
+	1: Flick_Serve -> Player2_Near_Back
+	1: High_Serve -> Player2_Near_Back
+	1: Fault -> Player2_Won{won = player2;} -> Skip
+};
+
+Right_Player1_Serve = Player2_Won{won = player2;} -> Skip;
+
+Left_Player2_Serve = Player1_Won{won = player1;} -> Skip;
+
+Right_Player2_Serve = Player1_Won{won = player1;} -> Skip;
+
+// Player 1 Strokes
+Player1_Near_Net = pcase{
+	1: Lift -> Player2_Near_Back
+	1: Drop -> Player2_Near_Net
+	1: Fault -> Player2_Won{won = player2;} -> Skip
+};
+
+Player1_Near_Back = pcase{
+	1: Clear -> Player2_Near_Back
+	1: Smash -> Player2_Counter_Smash
+	1: Drop -> Player2_Near_Net
+	1: Drive -> Player2_Counter_Drive
+	1: Fault -> Player2_Won{won = player2;} -> Skip
+};
+
+Player1_Counter_Smash = pcase{
+	1: Block -> Player2_Near_Net
+	1: Lift -> Player2_Near_Back
+	1: Drive -> Player2_Counter_Drive
+	1: Fault -> Player2_Won{won = player2;} -> Skip
+};
+
+Player1_Counter_Drive = pcase{
+	1: Drop -> Player2_Near_Net
+	1: Lift -> Player2_Near_Back
+	1: Drive -> Player2_Counter_Drive
+	1: Fault -> Player2_Won{won = player2;} -> Skip
+};
+
+// Player 2 Strokes
+Player2_Near_Net = pcase{
+	1: Lift -> Player1_Near_Back
+	1: Drop -> Player1_Near_Net
+	1: Fault -> Player1_Won{won = player1;} -> Skip
+};
+
+Player2_Near_Back = pcase{
+	1: Clear -> Player1_Near_Back
+	1: Smash -> Player1_Counter_Smash
+	1: Drop -> Player1_Near_Net
+	1: Drive -> Player1_Counter_Drive
+	1: Fault -> Player1_Won{won = player1;} -> Skip
+};
+
+Player2_Counter_Smash = pcase{
+	1: Block -> Player1_Near_Net
+	1: Lift -> Player1_Near_Back
+	1: Drive -> Player1_Counter_Drive
+	1: Fault -> Player1_Won{won = player1;} -> Skip
+};
+
+Player2_Counter_Drive = pcase{
+	1: Drop -> Player1_Near_Net
+	1: Lift -> Player1_Near_Back
+	1: Drive -> Player1_Counter_Drive
+	1: Fault -> Player1_Won{won = player1;} -> Skip
+};
+
+#define player1Win won == player1;
+#assert Game reaches player1Win with prob;
