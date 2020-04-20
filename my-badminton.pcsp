@@ -1,86 +1,197 @@
-﻿enum{left, right}; //serve position: ad court or deuce court
+﻿enum{left, right}; //player position
 enum{player1, player2, na}; // won player
+enum{to_diagonal_near, to_diagonal_far, to_adjacent_near, to_adjacent_far}; //player action
 
 var won = na;
+var player_serving = na;
+var player1_Score = 0;
+var player2_Score = 0;
+var player1_position = right;
+var player2_position = right;
+var player1_Last_Action = to_diagonal_near;
+var player2_Last_Action = to_diagonal_near;
 
-Game = pcase {
-	1: tau -> Left_Player1_Serve
-	1: tau -> Right_Player1_Serve
-	1: tau -> Left_Player2_Serve
-	1: tau -> Right_Player2_Serve
+// if no one reacher 21 points, a new round start
+NewRound = [player1_Score<21 && player2_Score<21]inProgress{won = na} -> Play
+		[] 
+	   [player1_Score >= 21]player1_won{won = player1} -> Skip
+	    []
+	   [player2_Score >= 21]player2_won{won = player2} -> Skip;
+
+// take turns to serve
+Play = [player_serving == na || player_serving == player2]player1_to_serve{player_serving = player1} -> Player1_Serve
+		[]
+	   [player_serving == player1]player2_to_serve{player_serving = player2} -> Player2_Serve;
+
+// serve from right if even scores
+Player1_Serve = [player1_Score%2 == 0]evenScore{player1_position = right} -> Player1_Right_Serve
+				 []
+				[player1_Score%2 == 1]oddScore{player1_position = left} -> Player1_Left_Serve;
+
+Player2_Serve = [player2_Score%2 == 0]evenScore{player2_position = right} -> Player2_Right_Serve
+				 []
+				[player2_Score%2 == 1]oddScore{player2_position = left} -> Player2_Left_Serve;
+
+// serve state, serve can only go to diagonal side, A's left to B's left, A's right to B's right
+Player1_Right_Serve = pcase {
+	1: Low_Serve{player1_Last_Action = to_diagonal_near} -> Player2_Right_Near
+	1: High_Serve{player1_Last_Action = to_diagonal_far} -> Player2_Right_Far	
+	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;} -> NewRound
 };
 
-Left_Player1_Serve = pcase {
-	1: Low_Serve -> Player2_Near_Net
-	1: Drive_Serve -> Player2_Counter_Drive
-	1: Flick_Serve -> Player2_Near_Back
-	1: High_Serve -> Player2_Near_Back
-	1: Fault -> Player2_Won{won = player2;} -> Skip
+Player1_Left_Serve = pcase {
+	1: Low_Serve{player1_Last_Action = to_diagonal_near} -> Player2_Left_Near
+	1: High_Serve{player1_Last_Action = to_diagonal_far} -> Player2_Left_Far	
+	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;} -> NewRound
 };
 
-Right_Player1_Serve = Player2_Won{won = player2;} -> Skip;
-
-Left_Player2_Serve = Player1_Won{won = player1;} -> Skip;
-
-Right_Player2_Serve = Player1_Won{won = player1;} -> Skip;
-
-// Player 1 Strokes
-Player1_Near_Net = pcase{
-	1: Lift -> Player2_Near_Back
-	1: Drop -> Player2_Near_Net
-	1: Fault -> Player2_Won{won = player2;} -> Skip
+Player2_Right_Serve = pcase {
+	1: Low_Serve{player2_Last_Action = to_diagonal_near} -> Player1_Right_Near
+	1: High_Serve{player2_Last_Action = to_diagonal_far} -> Player1_Right_Far	
+	1: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;} -> NewRound
 };
 
-Player1_Near_Back = pcase{
-	1: Clear -> Player2_Near_Back
-	1: Smash -> Player2_Counter_Smash
-	1: Drop -> Player2_Near_Net
-	1: Drive -> Player2_Counter_Drive
-	1: Fault -> Player2_Won{won = player2;} -> Skip
+Player2_Left_Serve = pcase {
+	1: Low_Serve{player2_Last_Action = to_diagonal_near} -> Player1_Left_Near
+	1: High_Serve{player2_Last_Action = to_diagonal_far} -> Player1_Left_Far	
+	1: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;} -> NewRound
 };
 
-Player1_Counter_Smash = pcase{
-	1: Block -> Player2_Near_Net
-	1: Lift -> Player2_Near_Back
-	1: Drive -> Player2_Counter_Drive
-	1: Fault -> Player2_Won{won = player2;} -> Skip
+// Player 1 status
+Player1_Left_Near = [player2_Last_Action == to_diagonal_near]from_Diagonal{player1_position = left} -> Player1_Counter_Diagonal_Near
+					 []
+					[player2_Last_Action == to_adjacent_near]from_Adjacent{player1_position = left} -> Player1_Counter_Adjacent_Near;
+
+Player1_Left_Far = [player2_Last_Action == to_diagonal_far]from_Diagonal{player1_position = left} -> Player1_Counter_Diagonal_Far
+					[]
+				   [player2_Last_Action == to_adjacent_far]from_Adjacent{player1_position = left} -> Player1_Counter_Adjacent_Far;
+				   
+Player1_Right_Near = [player1_Last_Action == to_diagonal_near]from_Diagonal{player1_position = right} -> Player1_Counter_Diagonal_Near
+					  []
+					 [player1_Last_Action == to_adjacent_near]from_Adjacent{player1_position = right} -> Player1_Counter_Adjacent_Near;
+
+Player1_Right_Far = [player1_Last_Action == to_diagonal_far]from_Diagonal{player1_position = right} -> Player1_Counter_Diagonal_Far
+				   	 []
+				    [player1_Last_Action == to_adjacent_far]from_Adjacent{player1_position = right} -> Player1_Counter_Adjacent_Far;
+				    
+// Player 1 make decision
+Player1_Counter_Diagonal_Near = pcase {
+	1: Go_Diagonal_Near -> Player1_Play_Diagonal_Near
+	1: Go_Adjacent_Near -> Player1_Play_Adjacent_Near
+	1: Go_Diagonal_Far -> Player1_Play_Diagonal_Far
+	1: Go_Adjacent_Far -> Player1_Play_Adjacent_Far
+	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;} -> NewRound
 };
 
-Player1_Counter_Drive = pcase{
-	1: Drop -> Player2_Near_Net
-	1: Lift -> Player2_Near_Back
-	1: Drive -> Player2_Counter_Drive
-	1: Fault -> Player2_Won{won = player2;} -> Skip
+Player1_Counter_Adjacent_Near = pcase {
+	1: Go_Diagonal_Near -> Player1_Play_Diagonal_Near
+	1: Go_Adjacent_Near -> Player1_Play_Adjacent_Near
+	1: Go_Diagonal_Far -> Player1_Play_Diagonal_Far
+	1: Go_Adjacent_Far -> Player1_Play_Adjacent_Far
+	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;} -> NewRound
 };
 
-// Player 2 Strokes
-Player2_Near_Net = pcase{
-	1: Lift -> Player1_Near_Back
-	1: Drop -> Player1_Near_Net
-	1: Fault -> Player1_Won{won = player1;} -> Skip
+Player1_Counter_Diagonal_Far = pcase {
+	1: Go_Diagonal_Near -> Player1_Play_Diagonal_Near
+	1: Go_Adjacent_Near -> Player1_Play_Adjacent_Near
+	1: Go_Diagonal_Far -> Player1_Play_Diagonal_Far
+	1: Go_Adjacent_Far -> Player1_Play_Adjacent_Far
+	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;} -> NewRound
 };
 
-Player2_Near_Back = pcase{
-	1: Clear -> Player1_Near_Back
-	1: Smash -> Player1_Counter_Smash
-	1: Drop -> Player1_Near_Net
-	1: Drive -> Player1_Counter_Drive
-	1: Fault -> Player1_Won{won = player1;} -> Skip
+Player1_Counter_Adjacent_Far = pcase {
+	1: Go_Diagonal_Near -> Player1_Play_Diagonal_Near
+	1: Go_Adjacent_Near -> Player1_Play_Adjacent_Near
+	1: Go_Diagonal_Far -> Player1_Play_Diagonal_Far
+	1: Go_Adjacent_Far -> Player1_Play_Adjacent_Far
+	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;} -> NewRound
 };
 
-Player2_Counter_Smash = pcase{
-	1: Block -> Player1_Near_Net
-	1: Lift -> Player1_Near_Back
-	1: Drive -> Player1_Counter_Drive
-	1: Fault -> Player1_Won{won = player1;} -> Skip
+// Player 1 actions
+Player1_Play_Diagonal_Near = [player1_position == left]Player1_At_Left{player1_Last_Action = to_diagonal_near} -> Player2_Left_Near
+							  []
+							 [player1_position == right]Player1_At_Right{player1_Last_Action = to_diagonal_near} -> Player2_Right_Near;
+							 
+Player1_Play_Adjacent_Near = [player1_position == left]Player1_At_Left{player1_Last_Action = to_adjacent_near} -> Player2_Right_Near
+							  []
+							 [player1_position == right]Player1_At_Right{player1_Last_Action = to_adjacent_near} -> Player2_Left_Near;
+							 
+Player1_Play_Diagonal_Far = [player1_position == left]Player1_At_Left{player1_Last_Action = to_diagonal_far} -> Player2_Left_Far
+							  []
+							 [player1_position == right]Player1_At_Right{player1_Last_Action = to_diagonal_far} -> Player2_Right_Far;
+
+Player1_Play_Adjacent_Far = [player1_position == left]Player1_At_Left{player1_Last_Action = to_adjacent_far} -> Player2_Right_Far
+							  []
+							 [player1_position == right]Player1_At_Right{player1_Last_Action = to_adjacent_far} -> Player2_Left_Far;
+
+// Player 2 status
+Player2_Left_Near = [player1_Last_Action == to_diagonal_near]from_Diagonal{player2_position = left} -> Player2_Counter_Diagonal_Near
+					 []
+					[player1_Last_Action == to_adjacent_near]from_Adjacent{player2_position = left} -> Player2_Counter_Adjacent_Near;
+
+Player2_Left_Far = [player1_Last_Action == to_diagonal_far]from_Diagonal{player2_position = left} -> Player2_Counter_Diagonal_Far
+					[]
+				   [player1_Last_Action == to_adjacent_far]from_Adjacent{player2_position = left} -> Player2_Counter_Adjacent_Far;
+				   
+Player2_Right_Near = [player2_Last_Action == to_diagonal_near]from_Diagonal{player2_position = right} -> Player2_Counter_Diagonal_Near
+					  []
+					 [player2_Last_Action == to_adjacent_near]from_Adjacent{player2_position = right} -> Player2_Counter_Adjacent_Near;
+
+Player2_Right_Far = [player2_Last_Action == to_diagonal_far]from_Diagonal{player2_position = right} -> Player2_Counter_Diagonal_Far
+				   	 []
+				    [player2_Last_Action == to_adjacent_far]from_Adjacent{player2_position = right} -> Player2_Counter_Adjacent_Far;
+				    
+// Player 2 make decision
+Player2_Counter_Diagonal_Near = pcase {
+	1: Go_Diagonal_Near -> Player2_Play_Diagonal_Near
+	1: Go_Adjacent_Near -> Player2_Play_Adjacent_Near
+	1: Go_Diagonal_Far -> Player2_Play_Diagonal_Far
+	1: Go_Adjacent_Far -> Player2_Play_Adjacent_Far
+	1: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;} -> NewRound
 };
 
-Player2_Counter_Drive = pcase{
-	1: Drop -> Player1_Near_Net
-	1: Lift -> Player1_Near_Back
-	1: Drive -> Player1_Counter_Drive
-	1: Fault -> Player1_Won{won = player1;} -> Skip
+Player2_Counter_Adjacent_Near = pcase {
+	1: Go_Diagonal_Near -> Player2_Play_Diagonal_Near
+	1: Go_Adjacent_Near -> Player2_Play_Adjacent_Near
+	1: Go_Diagonal_Far -> Player2_Play_Diagonal_Far
+	1: Go_Adjacent_Far -> Player2_Play_Adjacent_Far
+	1: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;} -> NewRound
 };
+
+Player2_Counter_Diagonal_Far = pcase {
+	1: Go_Diagonal_Near -> Player2_Play_Diagonal_Near
+	1: Go_Adjacent_Near -> Player2_Play_Adjacent_Near
+	1: Go_Diagonal_Far -> Player2_Play_Diagonal_Far
+	1: Go_Adjacent_Far -> Player2_Play_Adjacent_Far
+	1: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;} -> NewRound
+};
+
+Player2_Counter_Adjacent_Far = pcase {
+	1: Go_Diagonal_Near -> Player2_Play_Diagonal_Near
+	1: Go_Adjacent_Near -> Player2_Play_Adjacent_Near
+	1: Go_Diagonal_Far -> Player2_Play_Diagonal_Far
+	1: Go_Adjacent_Far -> Player2_Play_Adjacent_Far
+	1: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;} -> NewRound
+};
+
+// Player 2 actions
+Player2_Play_Diagonal_Near = [player2_position == left]Player2_At_Left{player2_Last_Action = to_diagonal_near} -> Player1_Left_Near
+							  []
+							 [player2_position == right]Player2_At_Right{player2_Last_Action = to_diagonal_near} -> Player1_Right_Near;
+							 
+Player2_Play_Adjacent_Near = [player2_position == left]Player2_At_Left{player2_Last_Action = to_adjacent_near} -> Player1_Right_Near
+							  []
+							 [player2_position == right]Player2_At_Right{player2_Last_Action = to_adjacent_near} -> Player1_Left_Near;
+							 
+Player2_Play_Diagonal_Far = [player2_position == left]Player2_At_Left{player2_Last_Action = to_diagonal_far} -> Player1_Left_Far
+							  []
+							 [player2_position == right]Player2_At_Right{player2_Last_Action = to_diagonal_far} -> Player1_Right_Far;
+
+Player2_Play_Adjacent_Far = [player2_position == left]Player2_At_Left{player2_Last_Action = to_adjacent_far} -> Player1_Right_Far
+							  []
+							 [player2_position == right]Player2_At_Right{player2_Last_Action = to_adjacent_far} -> Player1_Left_Far;
+
 
 #define player1Win won == player1;
+Game = NewRound;
 #assert Game reaches player1Win with prob;
