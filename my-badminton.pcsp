@@ -69,13 +69,13 @@ Player1_Left_Far = [player2_Last_Action == to_diagonal_far]from_Diagonal{player1
 					[]
 				   [player2_Last_Action == to_adjacent_far]from_Adjacent{player1_position = left} -> Player1_Counter_Adjacent_Far;
 				   
-Player1_Right_Near = [player1_Last_Action == to_diagonal_near]from_Diagonal{player1_position = right} -> Player1_Counter_Diagonal_Near
+Player1_Right_Near = [player2_Last_Action == to_diagonal_near]from_Diagonal{player1_position = right} -> Player1_Counter_Diagonal_Near
 					  []
-					 [player1_Last_Action == to_adjacent_near]from_Adjacent{player1_position = right} -> Player1_Counter_Adjacent_Near;
+					 [player2_Last_Action == to_adjacent_near]from_Adjacent{player1_position = right} -> Player1_Counter_Adjacent_Near;
 
-Player1_Right_Far = [player1_Last_Action == to_diagonal_far]from_Diagonal{player1_position = right} -> Player1_Counter_Diagonal_Far
+Player1_Right_Far = [player2_Last_Action == to_diagonal_far]from_Diagonal{player1_position = right} -> Player1_Counter_Diagonal_Far
 				   	 []
-				    [player1_Last_Action == to_adjacent_far]from_Adjacent{player1_position = right} -> Player1_Counter_Adjacent_Far;
+				    [player2_Last_Action == to_adjacent_far]from_Adjacent{player1_position = right} -> Player1_Counter_Adjacent_Far;
 				    
 // Player 1 make decision
 Player1_Counter_Diagonal_Near = pcase {
@@ -136,13 +136,13 @@ Player2_Left_Far = [player1_Last_Action == to_diagonal_far]from_Diagonal{player2
 					[]
 				   [player1_Last_Action == to_adjacent_far]from_Adjacent{player2_position = left} -> Player2_Counter_Adjacent_Far;
 				   
-Player2_Right_Near = [player2_Last_Action == to_diagonal_near]from_Diagonal{player2_position = right} -> Player2_Counter_Diagonal_Near
+Player2_Right_Near = [player1_Last_Action == to_diagonal_near]from_Diagonal{player2_position = right} -> Player2_Counter_Diagonal_Near
 					  []
-					 [player2_Last_Action == to_adjacent_near]from_Adjacent{player2_position = right} -> Player2_Counter_Adjacent_Near;
+					 [player1_Last_Action == to_adjacent_near]from_Adjacent{player2_position = right} -> Player2_Counter_Adjacent_Near;
 
-Player2_Right_Far = [player2_Last_Action == to_diagonal_far]from_Diagonal{player2_position = right} -> Player2_Counter_Diagonal_Far
+Player2_Right_Far = [player1_Last_Action == to_diagonal_far]from_Diagonal{player2_position = right} -> Player2_Counter_Diagonal_Far
 				   	 []
-				    [player2_Last_Action == to_adjacent_far]from_Adjacent{player2_position = right} -> Player2_Counter_Adjacent_Far;
+				    [player1_Last_Action == to_adjacent_far]from_Adjacent{player2_position = right} -> Player2_Counter_Adjacent_Far;
 				    
 // Player 2 make decision
 Player2_Counter_Diagonal_Near = pcase {
@@ -198,3 +198,4 @@ Player2_Play_Adjacent_Far = [player2_position == left]Player2_At_Left{player2_La
 #define player1Win won == player1;
 Game = WhoServe1st;NewRound;
 #assert Game reaches player1Win with prob;
+#assert Game deadlockfree;
