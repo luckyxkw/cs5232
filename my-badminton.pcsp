@@ -14,14 +14,14 @@ var player2_Last_Action = to_diagonal_near;
 
 WhoServe1st = []i:{player1,player2}@ TossCoin{serve_player = i} -> Skip;
 
-// if no one reacher 21 points, a new round start
+// if no one reaches winning points, a new round start
 NewRound = [player1_Score<winning_score && player2_Score<winning_score]inProgress{won = na} -> Play
 		[] 
 	   [player1_Score >= winning_score]player1_won{won = player1} -> Skip
 	    []
 	   [player2_Score >= winning_score]player2_won{won = player2} -> Skip;
 
-// take turns to serve
+// serve
 Play = [serve_player == player1]player1_to_serve -> Player1_Serve
 	[]
 	[serve_player == player2]player2_to_serve -> Player2_Serve;
