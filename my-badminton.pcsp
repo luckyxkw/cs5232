@@ -44,25 +44,25 @@ Player2_Serve = [player2_Score%2 == 0]evenScore{player2_position = right} -> Pla
 Player1_Right_Serve = pcase {
 	819: Low_Serve{player1_Last_Action = to_diagonal_near} -> Player2_Right_Near
 	180: High_Serve{player1_Last_Action = to_diagonal_far} -> Player2_Right_Far	
-	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
+	1: Miss -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
 };
 
 Player1_Left_Serve = pcase {
 	9989: Low_Serve{player1_Last_Action = to_diagonal_near} -> Player2_Left_Near
 	10: High_Serve{player1_Last_Action = to_diagonal_far} -> Player2_Left_Far	
-	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
+	1: Miss -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
 };
 
 Player2_Right_Serve = pcase {
 	9989: Low_Serve{player2_Last_Action = to_diagonal_near} -> Player1_Right_Near
 	10: High_Serve{player2_Last_Action = to_diagonal_far} -> Player1_Right_Far	
-	1: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
+	1: Miss -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
 };
 
 Player2_Left_Serve = pcase {
 	9989: Low_Serve{player2_Last_Action = to_diagonal_near} -> Player1_Left_Near
 	10: High_Serve{player2_Last_Action = to_diagonal_far} -> Player1_Left_Far	
-	1: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
+	1: Miss -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
 };
 
 // Player 1 status
@@ -88,7 +88,7 @@ Player1_Counter_Diagonal_Near = pcase {
 	11: Go_Adjacent_Near -> Player1_Play_Adjacent_Near
 	4: Go_Diagonal_Far -> Player1_Play_Diagonal_Far
 	9: Go_Adjacent_Far -> Player1_Play_Adjacent_Far
-	3: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
+	3: Miss -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
 };
 
 Player1_Counter_Adjacent_Near = pcase {
@@ -96,7 +96,7 @@ Player1_Counter_Adjacent_Near = pcase {
 	15: Go_Adjacent_Near -> Player1_Play_Adjacent_Near
 	7: Go_Diagonal_Far -> Player1_Play_Diagonal_Far
 	9: Go_Adjacent_Far -> Player1_Play_Adjacent_Far
-	4: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
+	4: Miss -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
 };
 
 Player1_Counter_Diagonal_Far = pcase {
@@ -104,7 +104,7 @@ Player1_Counter_Diagonal_Far = pcase {
 	7: Go_Adjacent_Near -> Player1_Play_Adjacent_Near
 	4: Go_Diagonal_Far -> Player1_Play_Diagonal_Far
 	8: Go_Adjacent_Far -> Player1_Play_Adjacent_Far
-	0: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
+	0: Miss -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
 };
 
 Player1_Counter_Adjacent_Far = pcase {
@@ -112,7 +112,7 @@ Player1_Counter_Adjacent_Far = pcase {
 	26: Go_Adjacent_Near -> Player1_Play_Adjacent_Near
 	10: Go_Diagonal_Far -> Player1_Play_Diagonal_Far
 	25: Go_Adjacent_Far -> Player1_Play_Adjacent_Far
-	1: Fault -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
+	1: Miss -> Player2_Get_Point{player2_Score = player2_Score + 1;serve_player = player2;} -> NewRound
 };
 
 // Player 1 actions
@@ -155,7 +155,7 @@ Player2_Counter_Diagonal_Near = pcase {
 	6: Go_Adjacent_Near -> Player2_Play_Adjacent_Near
 	4: Go_Diagonal_Far -> Player2_Play_Diagonal_Far
 	17: Go_Adjacent_Far -> Player2_Play_Adjacent_Far
-	8: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
+	8: Miss -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
 };
 
 Player2_Counter_Adjacent_Near = pcase {
@@ -163,7 +163,7 @@ Player2_Counter_Adjacent_Near = pcase {
 	16: Go_Adjacent_Near -> Player2_Play_Adjacent_Near
 	8: Go_Diagonal_Far -> Player2_Play_Diagonal_Far
 	23: Go_Adjacent_Far -> Player2_Play_Adjacent_Far
-	6: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
+	6: Miss -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
 };
 
 Player2_Counter_Diagonal_Far = pcase {
@@ -171,7 +171,7 @@ Player2_Counter_Diagonal_Far = pcase {
 	6: Go_Adjacent_Near -> Player2_Play_Adjacent_Near
 	8: Go_Diagonal_Far -> Player2_Play_Diagonal_Far
 	8: Go_Adjacent_Far -> Player2_Play_Adjacent_Far
-	3: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
+	3: Miss -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
 };
 
 Player2_Counter_Adjacent_Far = pcase {
@@ -179,7 +179,7 @@ Player2_Counter_Adjacent_Far = pcase {
 	10: Go_Adjacent_Near -> Player2_Play_Adjacent_Near
 	3: Go_Diagonal_Far -> Player2_Play_Diagonal_Far
 	25: Go_Adjacent_Far -> Player2_Play_Adjacent_Far
-	4: Fault -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
+	4: Miss -> Player1_Get_Point{player1_Score = player1_Score + 1;serve_player = player1;} -> NewRound
 };
 
 // Player 2 actions
