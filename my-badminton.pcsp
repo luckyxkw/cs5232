@@ -7,7 +7,7 @@ The probability in this simulation is retrieved from BWF2018 Kento MOMOTA vs LIN
 In our context, player1 is Kento MOMOTA and player2 is LIN Dan.
 */
 
-var winning_score = 11;
+var winning_score = 4;
 var won = na;
 var serve_player = na;
 var player1_Score = 0;
